@@ -2,6 +2,7 @@ const express = require('express');
 const yaml = require('js-yaml');
 const fs = require('fs');
 const path = require('path');
+const e = require("express");
 
 const app = express();
 const PORT = 3000;
@@ -39,22 +40,40 @@ app.get('/', (req, res) => {
 
 app.get('/:route', checkRoute, (req, res) => {
   const route = req.params.route;
+  const embed = req.query._embed;
   const data = config[route] || [];
 
-  res.json(data);
+  let result = data.map(record => {
+    if (embed) {
+      const embedData = config[embed] || [];
+      const embeddedRecord = embedData.filter(item => record.ownerIds.includes(item.id));
+      record[embed] = embeddedRecord;
+    }
+    return record;
+  })
+
+  res.json(result);
 });
 
 app.get('/:route/:id', checkRoute, (req, res) => {
   const route = req.params.route;
   const id = req.params.id;
+  const embed = req.query._embed;
+
   const data = config[route] || [];
 
-  const record = data.find(item => item.id == id);
+  const record = data.find(item => item.id == id); // leave warning untouched, using 3 '=' makes it not work
 
   if (!record) {
     return res.status(404).json({
       error: `Record with ID ${id} not found in ${route}`
-    });
+      });
+  }
+
+  if (embed) {
+    const embedData = config[embed] || [];
+    const embeddedRecord = embedData.filter(item => record.ownerIds.includes(item.id));
+    record[embed] = embeddedRecord;
   }
 
   res.json(record);
