@@ -46,7 +46,7 @@ app.get('/:route', checkRoute, (req, res) => {
   let result = data.map(record => {
     if (embed) {
       const embedData = config[embed] || [];
-      const embeddedRecord = embedData.filter(item => record.ownerIds.includes(item.id));
+      const embeddedRecord = embedData.filter(item => record.ownerIds.includes(item.id)); //ownerIds can break if original data doesnt have it
       record[embed] = embeddedRecord;
     }
     return record;
@@ -77,6 +77,23 @@ app.get('/:route/:id', checkRoute, (req, res) => {
   }
 
   res.json(record);
+});
+
+app.post('/:route', checkRoute, (req, res) => {
+  const route = req.params.route;
+  const data = config[route] || [];
+
+  const newRecord = req.body;
+
+  if (newRecord.id === undefined) {
+    const ids = data.map(record => Number(record.id)).filter(id => !isNaN(id));
+    newRecord.id = ids.length > 0 ? Math.max(...ids) + 1 : 1;
+  }
+
+  data.push(newRecord);
+  config[route] = data;
+
+  res.status(201).json(newRecord);
 });
 
 const server = app.listen(PORT, () => {
