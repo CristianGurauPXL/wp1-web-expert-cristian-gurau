@@ -86,7 +86,7 @@ app.post('/:route', checkRoute, (req, res) => {
   const newRecord = req.body;
 
   if (newRecord.id === undefined) {
-    const ids = data.map(record => Number(record.id)).filter(id => !isNaN(id));
+    const ids = data.map(record => Number(record.id));
     newRecord.id = ids.length > 0 ? Math.max(...ids) + 1 : 1;
   }
 
