@@ -96,6 +96,28 @@ app.post('/:route', checkRoute, (req, res) => {
   res.status(201).json(newRecord);
 });
 
+app.put('/:route/:id', checkRoute, (req, res) => {
+  const route = req.params.route;
+  const id = req.params.id;
+  const data = config[route] || [];
+
+  const index = data.findIndex(record => record.id == id);
+
+  if (index === -1) {
+    return res.status(404).json({
+      error: `Record with ID ${id} not found in ${route}`
+    });
+  }
+
+  const updatedRecord = req.body;
+  updatedRecord.id = data[index].id;
+
+  data[index] = updatedRecord;
+  config[route] = data;
+
+  res.json(updatedRecord);
+});
+
 const server = app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 }).on('error', (err) => {
