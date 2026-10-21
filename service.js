@@ -1,0 +1,89 @@
+const yaml = require('js-yaml');
+const fs = require('fs');
+const path = require('path');
+
+const CONFIG = process.argv[2] || 'config.yaml';
+
+let config;
+
+try {
+    config = yaml.load(
+        fs.readFileSync(path.join(__dirname, CONFIG), 'utf8')
+    );
+} catch (error) {
+    console.error('Error reading or parsing config:', error);
+    process.exit(1);
+}
+
+function getRoutes() {
+    return config.routes;
+}
+
+function getAll(route) {
+    return config[route] || [];
+}
+
+function getById(route, id) {
+    const data = getAll(route);
+    return data.find(record => record.id == id); // leave warning untouched, using 3 '=' makes it not work
+}
+
+function getEmbeddedRecords(route, record, embed) {
+    const relationships = config.relationships?.[route] || [];
+
+    const relationship = relationships.find(
+        rel => rel.relatedRoute === embed
+    );
+
+    if (!relationship) {
+        return [];
+    }
+
+    const foreignKeys = record[relationship.foreignKey];
+
+    if (!Array.isArray(foreignKeys)) {
+        return [];
+    }
+
+    const embedData = getAll(embed);
+
+    return embedData.filter(item => foreignKeys.includes(item.id));
+}
+
+function create(route, newRecord) {
+    const data = getAll(route);
+
+    if (newRecord.id === undefined) {
+        const ids = data.map(record => Number(record.id));
+        newRecord.id = ids.length > 0 ? Math.max(...ids) + 1 : 1;
+    }
+
+    data.push(newRecord);
+    config[route] = data;
+
+    return newRecord;
+}
+
+function update(route, id, updatedRecord) {
+    const data = getAll(route);
+    const index = data.findIndex(record => record.id == id);
+
+    if (index === -1) {
+        return null;
+    }
+
+    updatedRecord.id = data[index].id;
+    data[index] = updatedRecord;
+    config[route] = data;
+
+    return updatedRecord;
+}
+
+module.exports = {
+    getRoutes,
+    getAll,
+    getById,
+    getEmbeddedRecords,
+    create,
+    update
+};
