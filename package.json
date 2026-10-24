@@ -2,6 +2,7 @@
   "dependencies": {
     "express": "^5.1.0",
     "js-yaml": "^4.1.0",
-    "json-server": "^1.0.0-beta.15"
+    "json-server": "^1.0.0-beta.15",
+    "uuid": "^14.0.3"
   }
 }

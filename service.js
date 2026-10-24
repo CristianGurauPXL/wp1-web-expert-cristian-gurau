@@ -2,6 +2,8 @@ const yaml = require('js-yaml');
 const fs = require('fs');
 const path = require('path');
 
+const { v4: uuidv4 } = require('uuid');
+
 const CONFIG = process.argv[2] || 'config.yaml';
 
 let config;
@@ -25,7 +27,7 @@ function getAll(route) {
 
 function getById(route, id) {
     const data = getAll(route);
-    return data.find(record => record.id == id); // leave warning untouched, using 3 '=' makes it not work
+    return data.find(record => record.id === id);
 }
 
 function getEmbeddedRecords(route, record, embed) {
@@ -54,8 +56,7 @@ function create(route, newRecord) {
     const data = getAll(route);
 
     if (newRecord.id === undefined) {
-        const ids = data.map(record => Number(record.id));
-        newRecord.id = ids.length > 0 ? Math.max(...ids) + 1 : 1;
+        newRecord.id = uuidv4();
     }
 
     data.push(newRecord);
@@ -66,7 +67,7 @@ function create(route, newRecord) {
 
 function update(route, id, updatedRecord) {
     const data = getAll(route);
-    const index = data.findIndex(record => record.id == id);
+    const index = data.findIndex(record => record.id === id);
 
     if (index === -1) {
         return null;
@@ -81,7 +82,7 @@ function update(route, id, updatedRecord) {
 
 function remove(route, id) {
     const data = getAll(route);
-    const index = data.findIndex(record => record.id == id);
+    const index = data.findIndex(record => record.id === id);
 
     if (index === -1) {
         return null;
