@@ -82,6 +82,21 @@ app.put('/:route/:id', checkRoute, (req, res) => {
   res.json(updatedRecord);
 });
 
+// DELETE record
+app.delete('/:route/:id', checkRoute, (req, res) => {
+  const { route, id } = req.params;
+
+  const deletedRecord = service.remove(route, id);
+
+  if (!deletedRecord) {
+    return res.status(404).json({
+      error: `Record with ID ${id} not found in ${route}`
+    });
+  }
+
+  res.json(deletedRecord);
+});
+
 const server = app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 }).on('error', err => {

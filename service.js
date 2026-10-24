@@ -79,11 +79,26 @@ function update(route, id, updatedRecord) {
     return updatedRecord;
 }
 
+function remove(route, id) {
+    const data = getAll(route);
+    const index = data.findIndex(record => record.id == id);
+
+    if (index === -1) {
+        return null;
+    }
+
+    const deletedRecord = data.splice(index, 1)[0];
+    config[route] = data;
+
+    return deletedRecord;
+}
+
 module.exports = {
     getRoutes,
     getAll,
     getById,
     getEmbeddedRecords,
     create,
-    update
+    update,
+    remove
 };
