@@ -106,7 +106,15 @@ const server = app.listen(PORT, () => {
 
 const shutdown = () => {
   console.log('Shutting down...');
-  server.close(() => process.exit(0));
+
+  server.close(() => {
+    try {
+      service.saveConfig();
+      process.exit(0);
+    } catch (error) {
+      process.exit(1);
+    }
+  });
 };
 
 process.on('SIGINT', shutdown);

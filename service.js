@@ -4,14 +4,15 @@ const path = require('path');
 
 const { v4: uuidv4 } = require('uuid');
 
-const CONFIG = process.argv[2] || 'config.yaml';
+const CONFIG = path.join(
+    __dirname,
+    process.argv[2] || 'config.yaml'
+);
 
 let config;
 
 try {
-    config = yaml.load(
-        fs.readFileSync(path.join(__dirname, CONFIG), 'utf8')
-    );
+    config = yaml.load(fs.readFileSync(CONFIG, 'utf8'));
 } catch (error) {
     console.error('Error reading or parsing config:', error);
     process.exit(1);
@@ -94,6 +95,18 @@ function remove(route, id) {
     return deletedRecord;
 }
 
+function saveConfig() {
+    try {
+        const yamlContent = yaml.dump(config);
+        fs.writeFileSync(CONFIG, yamlContent, 'utf8');
+
+        console.log('Configuration saved successfully.');
+    } catch (error) {
+        console.error('Error saving configuration:', error);
+        throw error;
+    }
+}
+
 module.exports = {
     getRoutes,
     getAll,
@@ -101,5 +114,6 @@ module.exports = {
     getEmbeddedRecords,
     create,
     update,
-    remove
+    remove,
+    saveConfig
 };
