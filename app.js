@@ -6,47 +6,45 @@ const { engine } = require('express-handlebars');
 const app = express();
 const PORT = 3000;
 
-app.engine('handlebars', engine({
-  defaultLayout: false
-}));
+app.engine('handlebars', engine({ defaultLayout: false }));
 app.set('view engine', 'handlebars');
 app.set('views', path.join(__dirname, 'views'));
 
 app.use(express.json());
 
 app.get('/', (req, res) => {
-  res.render('home', {
-    routes: service.getRoutes()
-  });
+  res.render('home', { routes: service.getRoutes() });
 });
 
 function checkRoute(req, res, next) {
   const route = req.params.route;
 
   if (!service.getRoutes().includes(route)) {
-    return res.status(404).json({
-      error: `Route ${route} not found`
-    });
+    return res.status(404).json({ error: `Route ${route} not found` });
   }
 
   next();
 }
 
+function addEmbedding(route, record, embed) {
+  if (!embed) {
+    return record;
+  }
+
+  return {
+    ...record,
+    [embed]: service.getEmbeddedRecords(route, record, embed)
+  };
+}
+
 // GET all records
 app.get('/:route', checkRoute, (req, res) => {
-  const route = req.params.route;
-  const embed = req.query._embed;
+  const { route } = req.params;
+  const { _embed: embed } = req.query;
 
-  const result = service.getAll(route).map(record => {
-    if (!embed) {
-      return record;
-    }
-
-    return {
-      ...record,
-      [embed]: service.getEmbeddedRecords(route, record, embed)
-    };
-  });
+  const result = service.getAll(route).map(record =>
+      addEmbedding(route, record, embed)
+  );
 
   res.json(result);
 });
@@ -54,7 +52,7 @@ app.get('/:route', checkRoute, (req, res) => {
 // GET record by ID
 app.get('/:route/:id', checkRoute, (req, res) => {
   const { route, id } = req.params;
-  const embed = req.query._embed;
+  const { _embed: embed } = req.query;
 
   const record = service.getById(route, id);
 
@@ -64,11 +62,7 @@ app.get('/:route/:id', checkRoute, (req, res) => {
     });
   }
 
-  if (!embed) {
-    return res.json(record);
-  }
-
-  res.json({...record, [embed]: service.getEmbeddedRecords(route, record, embed)});
+  res.json(addEmbedding(route, record, embed));
 });
 
 // POST new record
@@ -80,7 +74,6 @@ app.post('/:route', checkRoute, (req, res) => {
 // PUT update record
 app.put('/:route/:id', checkRoute, (req, res) => {
   const { route, id } = req.params;
-
   const updatedRecord = service.update(route, id, req.body);
 
   if (!updatedRecord) {
@@ -95,7 +88,6 @@ app.put('/:route/:id', checkRoute, (req, res) => {
 // DELETE record
 app.delete('/:route/:id', checkRoute, (req, res) => {
   const { route, id } = req.params;
-
   const deletedRecord = service.remove(route, id);
 
   if (!deletedRecord) {
@@ -109,7 +101,9 @@ app.delete('/:route/:id', checkRoute, (req, res) => {
 
 const server = app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
-}).on('error', err => {
+});
+
+server.on('error', err => {
   console.error('Server failed to start:', err);
   process.exit(1);
 });
@@ -122,6 +116,7 @@ const shutdown = () => {
       service.saveConfig();
       process.exit(0);
     } catch (error) {
+      console.error('Failed to save configuration:', error);
       process.exit(1);
     }
   });

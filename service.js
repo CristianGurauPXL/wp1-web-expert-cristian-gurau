@@ -1,13 +1,9 @@
 const yaml = require('js-yaml');
 const fs = require('fs');
 const path = require('path');
-
 const { v4: uuidv4 } = require('uuid');
 
-const CONFIG = path.join(
-    __dirname,
-    process.argv[2] || 'config.yaml'
-);
+const CONFIG = path.join(__dirname, process.argv[2] || 'config.yaml');
 
 let config;
 
@@ -27,16 +23,12 @@ function getAll(route) {
 }
 
 function getById(route, id) {
-    const data = getAll(route);
-    return data.find(record => String(record.id) === id);
+    return getAll(route).find(record => String(record.id) === id);
 }
 
 function getEmbeddedRecords(route, record, embed) {
     const relationships = config.relationships?.[route] || [];
-
-    const relationship = relationships.find(
-        rel => rel.relatedRoute === embed
-    );
+    const relationship = relationships.find(rel => rel.relatedRoute === embed);
 
     if (!relationship) {
         return [];
@@ -48,9 +40,7 @@ function getEmbeddedRecords(route, record, embed) {
         return [];
     }
 
-    const embedData = getAll(embed);
-
-    return embedData.filter(item => foreignKeys.includes(item.id));
+    return getAll(embed).filter(item => foreignKeys.includes(item.id));
 }
 
 function create(route, newRecord) {
@@ -68,7 +58,7 @@ function create(route, newRecord) {
 
 function update(route, id, updatedRecord) {
     const data = getAll(route);
-    const index = data.findIndex(record => record.id === id);
+    const index = data.findIndex(record => String(record.id) === id);
 
     if (index === -1) {
         return null;
@@ -76,35 +66,25 @@ function update(route, id, updatedRecord) {
 
     updatedRecord.id = data[index].id;
     data[index] = updatedRecord;
-    config[route] = data;
 
     return updatedRecord;
 }
 
 function remove(route, id) {
     const data = getAll(route);
-    const index = data.findIndex(record => record.id === id);
+    const index = data.findIndex(record => String(record.id) === id);
 
     if (index === -1) {
         return null;
     }
 
-    const deletedRecord = data.splice(index, 1)[0];
-    config[route] = data;
-
-    return deletedRecord;
+    return data.splice(index, 1)[0];
 }
 
 function saveConfig() {
-    try {
-        const yamlContent = yaml.dump(config);
-        fs.writeFileSync(CONFIG, yamlContent, 'utf8');
-
-        console.log('Configuration saved successfully.');
-    } catch (error) {
-        console.error('Error saving configuration:', error);
-        throw error;
-    }
+    const yamlContent = yaml.dump(config);
+    fs.writeFileSync(CONFIG, yamlContent, 'utf8');
+    console.log('Configuration saved successfully.');
 }
 
 module.exports = {
