@@ -1,13 +1,23 @@
 const express = require('express');
 const service = require('./service');
+const path = require('path');
+const { engine } = require('express-handlebars');
 
 const app = express();
 const PORT = 3000;
 
+app.engine('handlebars', engine({
+  defaultLayout: false
+}));
+app.set('view engine', 'handlebars');
+app.set('views', path.join(__dirname, 'views'));
+
 app.use(express.json());
 
 app.get('/', (req, res) => {
-  res.send(`Configured routes: ${service.getRoutes()}`);
+  res.render('home', {
+    routes: service.getRoutes()
+  });
 });
 
 function checkRoute(req, res, next) {
