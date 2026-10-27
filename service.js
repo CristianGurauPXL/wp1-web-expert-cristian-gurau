@@ -28,7 +28,7 @@ function getAll(route) {
 
 function getById(route, id) {
     const data = getAll(route);
-    return data.find(record => record.id === id);
+    return data.find(record => String(record.id) === id);
 }
 
 function getEmbeddedRecords(route, record, embed) {

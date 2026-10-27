@@ -1,12 +1,31 @@
 {
   "info": {
     "_postman_id": "d998765f-61b1-4d86-9aa7-2f0c63a3d616",
-    "name": "New Collection",
+    "name": "Express API E2E Tests",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "49723105",
     "_collection_link": "https://go.postman.co/collection/49723105-d998765f-61b1-4d86-9aa7-2f0c63a3d616?source=collection_link"
   },
   "item": [
+    {
+      "name": "/",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
     {
       "name": "/persons",
       "request": {
@@ -27,18 +46,53 @@
       "response": []
     },
     {
+      "name": "/persons/1",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "http://localhost:3000/persons/2",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "persons",
+            "2"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
       "name": "/persons",
       "event": [
         {
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"Person created\", () => {\r",
+              "pm.test(\"Person was created successfully\", () => {\r",
               "    pm.response.to.have.status(201);\r",
-              "});\r",
               "\r",
-              "const person = pm.response.json();\r",
-              "pm.collectionVariables.set(\"personId\", person.id);"
+              "    const person = pm.response.json();\r",
+              "\r",
+              "    pm.expect(person.id).to.be.a(\"string\");\r",
+              "    pm.expect(person.id).to.match(\r",
+              "        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i\r",
+              "    );\r",
+              "\r",
+              "    pm.expect(person.name).to.equal(\"Postman Test Person\");\r",
+              "\r",
+              "    pm.collectionVariables.set(\"personId\", person.id);\r",
+              "});"
             ],
             "type": "text/javascript",
             "packages": {},
@@ -51,7 +105,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"name\": \"Postman Test\"\r\n}",
+          "raw": "{\r\n    \"name\": \"Postman Test Person\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -99,7 +153,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"name\": \"Putman Test\"\r\n}",
+          "raw": "{\r\n    \"name\": \"Putman Test Person\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -136,6 +190,56 @@
           "path": [
             "persons",
             "{{personId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/pets?_embed=persons",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Pets contain embedded persons\", () => {\r",
+              "    pm.response.to.have.status(200);\r",
+              "\r",
+              "    const pets = pm.response.json();\r",
+              "\r",
+              "    pm.expect(pets).to.be.an(\"array\");\r",
+              "    pm.expect(pets.length).to.be.greaterThan(0);\r",
+              "\r",
+              "    for (const pet of pets) {\r",
+              "        pm.expect(pet).to.have.property(\"ownerIds\");\r",
+              "        pm.expect(pet.ownerIds).to.be.an(\"array\");\r",
+              "    }\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/pets?_embed=persons",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "pets"
+          ],
+          "query": [
+            {
+              "key": "_embed",
+              "value": "persons"
+            }
           ]
         }
       },
